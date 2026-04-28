@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPM-NIWAS · SBM-G Training Registration Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --blue:#1a7bbf; --blue-dark:#0d5c91; --blue-light:#e8f4fc;
+  --green:#2d7d32; --green-light:#e8f5e9;
+  --accent:#f5a623; --bg:#f0f6fb; --card:#fff;
+  --text:#1a2e3b; --muted:#6b7f8c; --border:#cde0ed;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 60%,#1a9e6e 100%);
+  color:#fff;padding:0 24px;height:72px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 3px 10px rgba(0,0,0,0.25);
+}
+.hdr-left{display:flex;align-items:center;gap:12px;}
+.hdr-logo{height:54px;width:auto;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.4));}
+.hdr-titles .org{font-size:0.7rem;letter-spacing:1.4px;text-transform:uppercase;opacity:.85;font-weight:600;}
+.hdr-titles .title{font-size:1.1rem;font-weight:700;line-height:1.25;margin-top:1px;}
+.hdr-titles .sub{font-size:0.72rem;opacity:.8;margin-top:2px;}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.refresh-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.45);color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:.82rem;transition:background .2s;}
+.refresh-btn:hover{background:rgba(255,255,255,.32);}
+.last-upd{font-size:.7rem;opacity:.75;}
+
+/* SUBHEADER */
+.subhdr{background:var(--blue-dark);color:#fff;padding:5px 24px;font-size:.72rem;opacity:.9;display:flex;align-items:center;gap:8px;}
+
+/* FILTER BAR */
+.filter-bar{background:var(--card);border-bottom:2px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.filter-bar label{font-size:.75rem;color:var(--muted);font-weight:700;white-space:nowrap;}
+.filter-bar select,.filter-bar input[type=text]{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);background:#fff;}
+.filter-bar select:focus,.filter-bar input[type=text]:focus{outline:none;border-color:var(--blue);}
+.search-wrap{flex:1;min-width:160px;}
+.search-wrap input{width:100%;}
+.fetch-btn{background:var(--blue-dark);color:#fff;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:700;white-space:nowrap;transition:background .2s;}
+.fetch-btn:hover{background:var(--blue);}
+.data-status{font-size:.75rem;color:var(--muted);background:var(--blue-light);padding:4px 12px;border-radius:20px;white-space:nowrap;}
+.data-status strong{color:var(--blue-dark);}
+
+/* MAIN */
+main{padding:18px 24px;}
+
+/* TOP SUMMARY BAND */
+.top-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.tb-card{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 1px 5px rgba(0,0,0,.07);border-top:4px solid var(--blue);text-align:center;}
+.tb-card.c-total{border-top-color:var(--blue-dark);}
+.tb-card.c-online{border-top-color:var(--blue);}
+.tb-card.c-hybrid{border-top-color:#7b1fa2;}
+.tb-card.c-physical{border-top-color:#e65100;}
+.tb-card.c-hasnoms{border-top-color:var(--green);}
+.tb-card.c-nonoms{border-top-color:#e53935;}
+.tb-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+.tb-val{font-size:1.7rem;font-weight:800;color:var(--blue-dark);margin:3px 0;}
+.tb-sub{font-size:.68rem;color:var(--muted);}
+
+/* SECTION TITLE */
+.sec-title{font-size:.82rem;font-weight:700;color:var(--blue-dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;border-left:4px solid var(--blue);padding-left:8px;}
+
+/* KPI WIDGETS ROW */
+.widget-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:18px;}
+@media(max-width:900px){.widget-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:500px){.widget-row{grid-template-columns:1fr;}}
+.widget-card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);}
+.widget-card h4{font-size:.75rem;font-weight:700;color:var(--blue-dark);margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.witem{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f4f8;font-size:.78rem;}
+.witem:last-child{border-bottom:none;}
+.witem-label{color:var(--text);flex:1;}
+.witem-count{font-weight:700;color:var(--blue-dark);min-width:32px;text-align:right;}
+.witem-bar{width:50px;background:#e8f0f7;border-radius:3px;height:5px;margin:0 8px;}
+.witem-bar-fill{height:5px;border-radius:3px;background:var(--blue);transition:width .4s;}
+.gender-row{display:flex;gap:10px;margin-top:4px;}
+.gender-box{flex:1;text-align:center;padding:10px;border-radius:8px;}
+.gender-box.male{background:#e3f2fd;}
+.gender-box.female{background:#fce4ec;}
+.gender-icon{font-size:1.4rem;}
+.gender-label{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;}
+.gender-count{font-size:1.5rem;font-weight:800;color:var(--blue-dark);}
+.gender-pct{font-size:.7rem;color:var(--muted);}
+.no-data{font-size:.75rem;color:var(--muted);font-style:italic;padding:8px 0;}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;}
+.charts-row.two{grid-template-columns:1fr 1fr;}
+@media(max-width:900px){.charts-row,.charts-row.two{grid-template-columns:1fr 1fr;}}
+@media(max-width:580px){.charts-row,.charts-row.two{grid-template-columns:1fr;}}
+.chart-card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);}
+.chart-card.full{grid-column:1/-1;}
+.chart-card h3{font-size:.78rem;color:var(--text);margin-bottom:10px;font-weight:700;}
+.ch-wrap{position:relative;height:200px;}
+.ch-wrap.tall{height:240px;}
+
+/* REGISTRATION BAND */
+.band-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;}
+.band-card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);}
+.band-card h4{font-size:.75rem;font-weight:700;color:var(--blue-dark);margin-bottom:10px;}
+.band-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f4f8;font-size:.75rem;}
+.band-item:last-child{border-bottom:none;}
+.band-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:7px;}
+.band-label{flex:1;color:var(--text);}
+.band-count{font-weight:700;color:var(--blue-dark);}
+
+/* PARTICIPANT LIST PANEL */
+.participant-panel{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin-bottom:18px;}
+.participant-panel h3{font-size:.78rem;font-weight:700;margin-bottom:10px;}
+.p-table-wrap{overflow-x:auto;max-height:320px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:.75rem;}
+thead th{background:var(--blue-dark);color:#fff;padding:8px 10px;text-align:left;font-size:.7rem;font-weight:700;white-space:nowrap;position:sticky;top:0;}
+td{padding:7px 10px;border-bottom:1px solid #eef3f7;vertical-align:middle;}
+tr:hover td{background:#f4f9fd;}
+tr:last-child td{border-bottom:none;}
+
+/* COURSE TABLE */
+.table-card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin-bottom:18px;overflow-x:auto;}
+.table-card h3{font-size:.78rem;font-weight:700;margin-bottom:10px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;white-space:nowrap;}
+.badge-Hybrid{background:#f3e5f5;color:#7b1fa2;}
+.badge-Online{background:var(--blue-light);color:var(--blue-dark);}
+.badge-Physical{background:#fff3e0;color:#e65100;}
+.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;padding:2px 7px;border-radius:20px;}
+.status-upcoming{background:#fff8e1;color:#f57f17;}
+.status-ongoing{background:var(--green-light);color:var(--green);}
+.status-completed{background:#f5f5f5;color:#9e9e9e;}
+.reg-num{font-weight:800;font-size:.95rem;color:var(--green);}
+.reg-zero{font-weight:700;font-size:.85rem;color:#e53935;}
+.pb-bg{background:#e8f0f7;border-radius:4px;height:5px;min-width:50px;}
+.pb-fill{height:5px;border-radius:4px;background:var(--blue);transition:width .5s;}
+.sheet-link{color:var(--blue);text-decoration:none;font-size:.7rem;font-weight:600;}
+.sheet-link:hover{text-decoration:underline;}
+.skel{display:inline-block;background:linear-gradient(90deg,#dde8f0 25%,#eaf2f8 50%,#dde8f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px;height:10px;width:32px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.clickable-row{cursor:pointer;}
+.clickable-row:hover td{background:#e8f4fc !important;}
+.selected-row td{background:#d0eaf8 !important;}
+
+footer{text-align:center;padding:16px;font-size:.7rem;color:var(--muted);border-top:1px solid var(--border);background:var(--card);}
+footer a{color:var(--blue);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-left">
+    <img class="hdr-logo" src="https://spm-niwas.gov.in/images/logo.png"
+         onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIwIDE0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNjAgNSBDNjAgNSAxNSA3MCAxNSA5NSBBNDUgNDUgMCAwIDAgMTA1IDk1IEMxMDUgNzAgNjAgNSA2MCA1WiIgZmlsbD0iIzFhOWVkNCIvPjxwYXRoIGQ9Ik0yOCA4NSBDMjAgNTUgNDUgMzggNjIgNTIgQzUwIDYwIDM4IDcyIDQyIDk1IEMzNSA5MyAyOCA5MCAyOCA4NVoiIGZpbGw9IiMyZDhjM2UiLz48cGF0aCBkPSJNMzggMTAwIEMzOCA3OCA1MiA2NSA2NCA2OCBDNzQgNzAgODAgODAgNzUgOTAgQzcwIDk4IDU4IDEwMiA0OCAxMDBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTJlM2IiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTY0IDY4IEM2NiA1OCA3MiA1MCA3OCA0OCBDODQgNDYgODggNTAgODYgNTYgQzg0IDYwIDgwIDYyIDc2IDYyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTJlM2IiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNODYgNTYgQzkwIDU0IDk0IDU2IDkyIDYwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTJlM2IiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM4IDEwMCBDMzAgMTAyIDI0IDk4IDI2IDkyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTJlM2IiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+'
+         alt="SPM-NIWAS Logo">
+    <div class="hdr-titles">
+      <div class="org">SPM-NIWAS · Joka, Kolkata</div>
+      <div class="title">SBM-G Training Programme</div>
+      <div class="sub">Course-wise Participant Registration Dashboard · 2026–27</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="last-upd">Updated: <span id="lastRefreshed">—</span></div>
+    <button class="refresh-btn" onclick="loadAllSheets()">⟳ Refresh All</button>
+  </div>
+</header>
+
+<div class="subhdr">
+  <span>Ministry of Jal Shakti · Dept. of Drinking Water &amp; Sanitation</span>&nbsp;|&nbsp;
+  <span>Swachh Bharat Mission (Grameen)</span>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <label>Course Type:</label>
+  <select id="filterType">
+    <option value="">All Types</option>
+    <option value="Online">Online</option>
+    <option value="Hybrid">Hybrid</option>
+    <option value="Physical">Physical</option>
+  </select>
+  <label>Month:</label>
+  <select id="filterMonth">
+    <option value="">All Months</option>
+    <option value="2026-04">Apr 2026</option><option value="2026-05">May 2026</option>
+    <option value="2026-06">Jun 2026</option><option value="2026-07">Jul 2026</option>
+    <option value="2026-08">Aug 2026</option><option value="2026-09">Sep 2026</option>
+    <option value="2026-10">Oct 2026</option><option value="2026-11">Nov 2026</option>
+    <option value="2026-12">Dec 2026</option><option value="2027-01">Jan 2027</option>
+    <option value="2027-02">Feb 2027</option><option value="2027-03">Mar 2027</option>
+  </select>
+  <label>Status:</label>
+  <select id="filterStatus">
+    <option value="">All</option>
+    <option value="upcoming">Upcoming</option>
+    <option value="ongoing">Ongoing</option>
+    <option value="completed">Completed</option>
+  </select>
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="🔍  Search course name or code…">
+  </div>
+  <button class="fetch-btn" onclick="applyFiltersAndFetch()">⟳ Fetch &amp; Apply</button>
+  <div class="data-status">Loaded: <strong><span id="loadedCount">0</span>/<span id="totalCount">80</span></strong></div>
+</div>
+
+<main>
+
+<!-- TOP BAND -->
+<div class="sec-title">📋 Course Overview</div>
+<div class="top-band">
+  <div class="tb-card c-total"><div class="tb-lbl">Total Courses</div><div class="tb-val" id="tbTotal">80</div><div class="tb-sub">in programme</div></div>
+  <div class="tb-card c-online"><div class="tb-lbl">Online</div><div class="tb-val" id="tbOnline">—</div><div class="tb-sub">courses</div></div>
+  <div class="tb-card c-hybrid"><div class="tb-lbl">Hybrid</div><div class="tb-val" id="tbHybrid">—</div><div class="tb-sub">courses</div></div>
+  <div class="tb-card c-physical"><div class="tb-lbl">Physical</div><div class="tb-val" id="tbPhysical">—</div><div class="tb-sub">courses</div></div>
+  <div class="tb-card c-hasnoms"><div class="tb-lbl">With Nominations</div><div class="tb-val" id="tbHasNoms">—</div><div class="tb-sub">courses</div></div>
+  <div class="tb-card c-nonoms"><div class="tb-lbl">Zero Nominations</div><div class="tb-val" id="tbNoNoms">—</div><div class="tb-sub">courses</div></div>
+  <div class="tb-card c-total"><div class="tb-lbl">Total Registrations</div><div class="tb-val" id="tbTotalRegs">—</div><div class="tb-sub">participants</div></div>
+</div>
+
+<!-- PARTICIPANT WIDGETS -->
+<div class="sec-title">👥 Participant Profile Widgets <span style="font-weight:400;font-size:.7rem;color:var(--muted)">(updates when you click a course row or apply filters)</span></div>
+<div class="widget-row">
+  <!-- Gender -->
+  <div class="widget-card">
+    <h4>⚤ Gender Distribution</h4>
+    <div class="gender-row">
+      <div class="gender-box male">
+        <div class="gender-icon">👨</div>
+        <div class="gender-count" id="wMale">—</div>
+        <div class="gender-label">Male</div>
+        <div class="gender-pct" id="wMalePct"></div>
+      </div>
+      <div class="gender-box female">
+        <div class="gender-icon">👩</div>
+        <div class="gender-count" id="wFemale">—</div>
+        <div class="gender-label">Female</div>
+        <div class="gender-pct" id="wFemalePct"></div>
+      </div>
+    </div>
+  </div>
+  <!-- State -->
+  <div class="widget-card">
+    <h4>🗺️ Top States</h4>
+    <div id="wStateList"><div class="no-data">Select a course or apply filters</div></div>
+  </div>
+  <!-- Department -->
+  <div class="widget-card">
+    <h4>🏛️ Top Departments</h4>
+    <div id="wDeptList"><div class="no-data">Select a course or apply filters</div></div>
+  </div>
+  <!-- Designation -->
+  <div class="widget-card">
+    <h4>🪪 Top Designations</h4>
+    <div id="wDesigList"><div class="no-data">Select a course or apply filters</div></div>
+  </div>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="sec-title">📊 Registration Analytics</div>
+<div class="charts-row">
+  <div class="chart-card">
+    <h3>Registrations by Course Type</h3>
+    <div class="ch-wrap"><canvas id="typeChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Course Type Distribution</h3>
+    <div class="ch-wrap"><canvas id="donutChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Course Status Overview</h3>
+    <div class="ch-wrap"><canvas id="statusChart"></canvas></div>
+  </div>
+</div>
+<div class="charts-row">
+  <div class="chart-card full">
+    <h3>Monthly Registration Trend</h3>
+    <div class="ch-wrap tall"><canvas id="monthlyChart"></canvas></div>
+  </div>
+</div>
+<div class="charts-row two">
+  <div class="chart-card">
+    <h3>Gender Split (filtered courses)</h3>
+    <div class="ch-wrap"><canvas id="genderChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Top 10 States (filtered courses)</h3>
+    <div class="ch-wrap"><canvas id="stateChart"></canvas></div>
+  </div>
+</div>
+
+<!-- REGISTRATION BAND -->
+<div class="sec-title">📶 Registration Band Analysis</div>
+<div class="band-grid" id="bandGrid"></div>
+
+<!-- PARTICIPANT LIST (shown when course clicked) -->
+<div class="participant-panel" id="participantPanel" style="display:none">
+  <h3 id="participantPanelTitle">Participants</h3>
+  <div class="p-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>Gender</th><th>State</th>
+          <th>Designation &amp; District</th><th>Department &amp; District</th>
+        </tr>
+      </thead>
+      <tbody id="participantTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- COURSE TABLE -->
+<div class="table-card">
+  <h3>📝 Course-wise Registration Details &nbsp;<span style="font-weight:400;color:var(--muted);font-size:.72rem" id="tableCount"></span></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Course Name</th><th>Type</th><th>Code</th>
+        <th>Start</th><th>End</th><th>Status</th>
+        <th style="text-align:center">Registrations</th><th>Progress</th><th>Sheet</th>
+      </tr>
+    </thead>
+    <tbody id="courseTableBody"></tbody>
+  </table>
+</div>
+
+</main>
+
+<footer>
+  © SPM-NIWAS · Diamond Harbour Road, Near IIM Calcutta, Joka, Kolkata-700 104 &nbsp;|&nbsp;
+  spm.niwas@gov.in &nbsp;|&nbsp; +91 33 2453 0000 &nbsp;|&nbsp;
+  <a href="https://ejalshakti.gov.in" target="_blank">Dept. of Drinking Water &amp; Sanitation</a>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// COURSE DATA
+// ═══════════════════════════════════════════════════════
+const COURSES = [
+  {no:1,  name:"Comprehensive Operation and Management of Solid and Liquid Waste Disposal Facilities under SBM-G and Other Programs",type:"Hybrid",  code:"SBM-H-01",   from:"2026-04-16",to:"2026-05-08",sid:"17398bw19wNEVO-It-eBPBtBXDIob_w7ZQ1JwBBUr7rg"},
+  {no:2,  name:"Sustaining ODF Plus Village",type:"Online",  code:"SBM-OL-01",  from:"2026-05-11",to:"2026-05-11",sid:"1zyvtHQeoNL0GHtbe-KgvQzqnzlbTBEAS8n8pkMvYRGI"},
+  {no:3,  name:"Solid Waste Management at GP Level",type:"Online",  code:"SBM-OL-02",  from:"2026-05-12",to:"2026-05-12",sid:"1RgGxRHbACF8PbHlHnCQqlIxDzhOMGlRIV5wBBQfwYUg"},
+  {no:4,  name:"Webinar to be Planned",type:"Online",  code:"SBM-W-01",   from:"2026-05-14",to:"2026-05-14",sid:"1LV_KeCVZRRPSd8SAulImQjMW8lb1vZuaBhA4lPdqM-s"},
+  {no:5,  name:"Solid Waste Management Rule 2016",type:"Online",  code:"SBM-OL-03",  from:"2026-05-15",to:"2026-05-15",sid:"141RLIG9gHMjag5wiZrVG_f_6Ny0naWPD8FDQeNO1FZA"},
+  {no:6,  name:"Training of Master Trainers on imparting training skills using DOPT modules.",type:"Physical", code:"SPM-P-01",   from:"2026-05-18",to:"2026-05-22",sid:"1XI6CNF2B10xqjtCVaLaZKpbcFRsm_xqvzEcppHcFYoU"},
+  {no:7,  name:"Operation and Maintenance of sanitation Assets",type:"Online",  code:"SBM-OL-04",  from:"2026-06-01",to:"2026-06-01",sid:"1PBncztXL3P8kgGyLAuhLA6IJKOGgLy9f6wP7qPOyA7Y"},
+  {no:8,  name:"IMIS and digital Monitoring Systems",type:"Online",  code:"SBM-OL-05",  from:"2026-06-03",to:"2026-06-03",sid:"1_x8qyT15C4hVpAk9mcGBwWWBSa3MDpjcdgJFhLiZIG0"},
+  {no:9,  name:"Development and management of rural sanitation infrastructure in challenging, remote hilly areas",type:"Hybrid",  code:"SBM-H-02",   from:"2026-05-21",to:"2026-06-12",sid:"1E_FWnMNDFrM-Tog1Z6BONG4DfNEYYB_coG3Pl9bgui8"},
+  {no:10, name:"Convergence of SBM-G with VB-G RAM G",type:"Online",  code:"SBM-OL-06",  from:"2026-06-15",to:"2026-06-15",sid:"1XAfmAqI1N9EPqEsjncDaAa0RDkkyF28Fq23A5mTrjFc"},
+  {no:11, name:"Feacal Sludge Management in Rural Areas",type:"Online",  code:"SBM-OL-07",  from:"2026-06-16",to:"2026-06-16",sid:"1EDxF7McCTPayAfS5eX8oaRw3MhZpW7JwZWqz_7Es9PQ"},
+  {no:12, name:"Plastic Waste Management and PWM Rule 2022",type:"Online",  code:"SBM-OL-08",  from:"2026-06-17",to:"2026-06-17",sid:"13wxMU-yY-Gpyq4-zbyWpPjw-VKOrdaWdC45olG3cdcQ"},
+  {no:13, name:"Role of Gender Mainstreaming in Sanitation Management for Better Outcomes",type:"Online",  code:"SBM-W-02",   from:"2026-06-19",to:"2026-06-19",sid:"1866QV4pweOR2NRQzM1CJFdobFCkAtJ6Sjh2wMur5mxY"},
+  {no:14, name:"Comprehensive Management of Community Sanitary Complexes, IHHL, and Public Sanitation Facilities",type:"Hybrid",  code:"SBM-H-03",   from:"2026-06-04",to:"2026-06-25",sid:"1llYi1MieJZbYOtfcpnDLT_fGFgmxW4ciUpGEyhMiZWU"},
+  {no:15, name:"IEC & Social Behaviour Change",type:"Online",  code:"SBM-OL-09",  from:"2026-06-29",to:"2026-06-29",sid:"1WWr4JiJU8utVJJSA7yTVxY4oHp9L9seJrS9I6XHA3e8"},
+  {no:16, name:"Livelihood Opportunity in Waste Management",type:"Online",  code:"SBM-OL-10",  from:"2026-06-30",to:"2026-06-30",sid:"1SBCGcIvyrhCCmw6wSRSYiFVRd_h2Z4cPSzoDRrSS5tY"},
+  {no:17, name:"Gobardhan: Technological options and O&M",type:"Online",  code:"SBM-OL-11",  from:"2026-07-06",to:"2026-07-06",sid:"1yX-uejjqu4rkLQZW3Mi5Wn1SQJdI7tbW_wVg-UVZZXs"},
+  {no:18, name:"Safe Disposal of Thermocol",type:"Online",  code:"SBM-W-03",   from:"2026-07-07",to:"2026-07-07",sid:"13CVDt8EJ8GB2RBKvfTsMvgeKeooScioG6Paj7P_zixg"},
+  {no:19, name:"Use of Waste Plastic in Road Construction And its O&M",type:"Online",  code:"SBM-OL-12",  from:"2026-07-08",to:"2026-07-08",sid:"19EfVEltMOcneRwpkLlauORmB2OM12CTG2J6Zl44hcnI"},
+  {no:20, name:"Menstrual Hygiene & Menstrual Waste Management",type:"Online",  code:"SBM-OL-13",  from:"2026-07-09",to:"2026-07-09",sid:"19JJUT72jpv0If5uZp9JUAUrNM-PWAXG7AhcvoKl5ssQ"},
+  {no:21, name:"IEC, SBCC, COMBI and Community Mobilisation Strategies for Safe Rural Sanitation",type:"Hybrid",  code:"SBM-H-05",   from:"2026-07-02",to:"2026-07-24",sid:"1i6qqNYyqHFIOXCpgWCq2jou5dj7CrOFEvr0q4fLPM-0"},
+  {no:22, name:"Training of Master Trainers on imparting training skills using DOPT modules. (Batch 2)",type:"Physical", code:"SPM-P-01",   from:"2026-07-27",to:"2026-07-31",sid:"1jwhg_EQ099r9R1T1bowajv7NkJD7NmL5J9n7N9W1ZHQ"},
+  {no:23, name:"Training on Use Social Media Campaign for SBM(G)-II",type:"Online",  code:"SBM-OL-14",  from:"2026-07-27",to:"2026-07-27",sid:"1Die3-A5ZQxprKPU8De0oyX8iuhAd2VLwTXJgvmEkLa8"},
+  {no:24, name:"Orientation program on 15th Finance Commission Grant for senior elected members and officials.",type:"Online",  code:"SBM-OL-15",  from:"2026-07-28",to:"2026-07-28",sid:"1RJYMY28oCGlN-eIl3IiuWXM-zioDBNjsQPqce1f7cJA"},
+  {no:25, name:"Comprehensive Operation and Management of Solid and Liquid Waste Disposal Facilities (Batch 2)",type:"Hybrid",  code:"SBM-H-01",   from:"2026-07-14",to:"2026-08-07",sid:"1f0f-Mg7-h0u8JdXsrXmExgHfJc6vd9odgcJ8DY2dAVI"},
+  {no:26, name:"Online Training on Retrofitting of IHHLs & CSC and their O&M",type:"Online",  code:"SBM-OL-16",  from:"2026-08-10",to:"2026-08-10",sid:"1DVqdVoaaHuTZXUPox8Od-OXZvHKgCALW-T1vxY0lHtw"},
+  {no:27, name:"Impact of Safe Sanitation and Water on Health, Economy, and Gender Equity",type:"Online",  code:"SBM-W-04",   from:"2026-08-11",to:"2026-08-11",sid:"1pRLDN71_-q3giEReIep3BVTCnX7tbJeqWz-bOhYsufw"},
+  {no:28, name:"Swachh Vidyalaya Campaign: Promoting WASH in Schools through Awareness and Action",type:"Online",  code:"SBM-OL-17",  from:"2026-08-12",to:"2026-08-12",sid:"1Bfgp1F4DfY6GaXbMwePdb1DeUaR8Ads1zMHu7_vrg_E"},
+  {no:29, name:"Online Course to be planned",type:"Online",  code:"SBM-OL-18",  from:"2026-08-13",to:"2026-08-13",sid:"1J_NWPSBINx3kKzl7vMMYiAgqX4qHVk19q2CSkWBBFw8"},
+  {no:30, name:"Online Course to be planned (II)",type:"Online",  code:"SBM-OL-19",  from:"2026-08-14",to:"2026-08-14",sid:"1yqSng8tAxOKtFd-xKFhz8oNR6EhC9TlCVp6UpyLxyFQ"},
+  {no:31, name:"Course on Digital Governance of Sanitation Assets, including Monitoring and SBM-G MIS",type:"Hybrid",  code:"SBM-H-06",   from:"2026-07-30",to:"2026-08-21",sid:"1O6UwQ-TaCLZ5Hpy9f3ApYg_6W4zPoGMyzXG8RaWGLaA"},
+  {no:32, name:"Online Training on Safety, Dignity, and Welfare of Sanitation Workers & POSH Compliance",type:"Online",  code:"SBM-W-05",   from:"2026-08-31",to:"2026-08-31",sid:"1ulmot4BaUN7crlr1Lqlt6mu7Bwj7EaFaC8OyxEKvniY"},
+  {no:33, name:"Safety and Dignity of Sanitation Workers and Ragpickers",type:"Online",  code:"SBM-OL-20",  from:"2026-09-01",to:"2026-09-01",sid:"1pZXZJwHd6NWOZ8_yG_zTS2wjqJsq_RRwZr7aZxHkhJ8"},
+  {no:34, name:"Biodegradable Waste Processing through Vermi-Composting and its challenges",type:"Online",  code:"SBM-OL-21",  from:"2026-09-02",to:"2026-09-02",sid:"1xmwdLqWXE7vQb77fwTbdmeSvn7yS4s4xkjfK6CCIAHU"},
+  {no:35, name:"Detailed course on Planning, Design, Construction, and Management of Greywater Management Systems",type:"Hybrid",  code:"SBM-H-04",   from:"2026-08-20",to:"2026-09-11",sid:"1Le-ba4Ke_XrKrSqMG0BI5T4zgxw9KbbROoFMvgpWDCY"},
+  {no:36, name:"Managing E-Waste",type:"Online",  code:"SBM-OL-22",  from:"2026-09-15",to:"2026-09-15",sid:"1TTQUX-uiGOB1bKmpnYDW6fclZeFd1XzZJIQD-vmxMdQ"},
+  {no:37, name:"Principles and Relevance of ESG (Environmental, Social, and Governance)",type:"Online",  code:"SBM-W-06",   from:"2026-09-16",to:"2026-09-16",sid:"1GUaGNYwxLRjkCCGEFC4CIh1Fps8WC-UIzwiN-InWEmk"},
+  {no:38, name:"Managing Bio-Degradable Wastes",type:"Online",  code:"SBM-OL-23",  from:"2026-09-17",to:"2026-09-17",sid:"1l5ZeJ5BDryICaCj7uv4HJWrY-bV1j7EDzX58vR2FZVY"},
+  {no:39, name:"Training of Master Trainers on imparting training skills using DOPT modules. (Batch 3)",type:"Physical", code:"SPM-P-01",   from:"2026-10-05",to:"2026-10-09",sid:"1WMEwXAJQfg4lF0mHSimsC0KClciUmDsoE5sbtnAeXh8"},
+  {no:40, name:"Grey water management: Convergence with VB-G RAM G and other programs",type:"Hybrid",  code:"SBM-OS-H-01",from:"2026-09-30",to:"2026-10-09",sid:"1Pjlh4HlKlegcnv7LtZqG7C2U7CNAyI1BZzmDio6GIRE"},
+  {no:41, name:"Operations & Maintenance of Bio-gas Plant (GOBARdhan)",type:"Online",  code:"SBM-OL-24",  from:"2026-10-12",to:"2026-10-12",sid:"1HhFMEVu90VZRlFSE7IYiqvAYjw5CQ0havUWOVZIyTAU"},
+  {no:42, name:"Strengthening VWSCs",type:"Online",  code:"SBM-OL-25",  from:"2026-10-13",to:"2026-10-13",sid:"1BkjPNLtduHfogpEo0quVMbK5CiAsNDWlevBBeiU6hKM"},
+  {no:43, name:"Report Writing & Documentation",type:"Online",  code:"SBM-OL-26",  from:"2026-10-14",to:"2026-10-14",sid:"1V7IEXNFoEB-cWUL1Xf_TRIY-Z6Q7Aj2PqcK3bImlwsI"},
+  {no:44, name:"Innovative Case Studies on Grey Water Management",type:"Online",  code:"SBM-W-07",   from:"2026-10-15",to:"2026-10-15",sid:"1HOfBesJYrNu5B5N8anKSkUKb2rMtuVfLSOQkYlB8Mbg"},
+  {no:45, name:"Development of contents for Social Media",type:"Online",  code:"SBM-OL-27",  from:"2026-11-16",to:"2026-11-16",sid:"12LNnYl2xRjA2hWqQCGBVVdX7gA1tXXfrLk7s8e6PVro"},
+  {no:46, name:"Different PRA Tools",type:"Online",  code:"SBM-OL-28",  from:"2026-11-17",to:"2026-11-17",sid:"1rb2Uqnp6iVqzH6Pxokic0kiOW2ttP7G81ebb2aufBTQ"},
+  {no:47, name:"Circular Economy in Waste Management",type:"Online",  code:"SBM-W-08",   from:"2026-11-18",to:"2026-11-18",sid:"1O4xNqYmWDil8wI4eOHmTPiHYrh2nCEV5d3deru8guIQ"},
+  {no:48, name:"Planning, Construction and Management: Rural Solid Waste Management Infrastructure",type:"Hybrid",  code:"SBM-H-07",   from:"2026-11-12",to:"2026-12-04",sid:"1Zutr-xfqza5s1atwcndKTjpn0kjZH1TD7JGUAZXjJVY"},
+  {no:49, name:"IEC, SBCC, and community mobilization strategies.",type:"Hybrid",  code:"SBM-OS-H-02",from:"2026-12-03",to:"2026-12-11",sid:"1N9Z4aOpsIjFxIEOdLQ-w_EDUW9sI62Mlpw7v2Hz_fOk"},
+  {no:50, name:"Swachhata Green Leaf Rating in Hospitality Facilities",type:"Online",  code:"SBM-OL-29",  from:"2026-12-07",to:"2026-12-07",sid:"1QGISrK-XAlq7CP5L_9u2p5hr1Y3wKqzN8kBXj-J7aSw"},
+  {no:51, name:"E-Waste: A Renewable Source of Resources",type:"Online",  code:"SBM-OL-30",  from:"2026-12-08",to:"2026-12-08",sid:"1yqOqLXwAmY_JoafzBhsr9mcOF3I3hybEDGLTYW6ZA5A"},
+  {no:52, name:"Carbon Credit Potential in Solid Waste",type:"Online",  code:"SBM-W-09",   from:"2026-12-09",to:"2026-12-09",sid:"1h-lI-S7IWAnOtvPDVXcWtiDkt7_xL2n8higwwOUA4Jg"},
+  {no:53, name:"Detailed course on Planning, Design, Construction, and Management of Plastic Waste Management Systems",type:"Hybrid",  code:"SBM-H-08",   from:"2026-11-26",to:"2026-12-18",sid:"1FxRIlHU_y3IF3WFNPXCVjlKHkM1tnr4kT-U7jzhdFMw"},
+  {no:54, name:"Course on Digital Governance of Sanitation Assets (Batch 2)",type:"Hybrid",  code:"SBM-OS-H-03",from:"2026-12-16",to:"2027-01-08",sid:"1XDglsMdd0aW_Ayemehj49MMn7MBb_-gvS0-DnZiwKiI"},
+  {no:55, name:"Convergence with MGNREGA with SBM(G): LWM, Retrofitting of IHHL & CSC",type:"Online",  code:"SBM-OL-31",  from:"2027-01-04",to:"2027-01-04",sid:"1KbnlLDcY_M-4O4j5G54r_xlfMzBrUkoWAZDdlCc2mQ4"},
+  {no:56, name:"Greywater Management in Rural Areas",type:"Online",  code:"SBM-OL-32",  from:"2027-01-05",to:"2027-01-05",sid:"1llGkcyb-48w53yiQq-nW8_AAmcEo7-HYgEAYe7bTifI"},
+  {no:57, name:"GPDP & LSDG in SBM(G)",type:"Online",  code:"SBM-OL-33",  from:"2027-01-06",to:"2027-01-06",sid:"123938pcEgJgyv-_i9ZViNzJBEeXWhHBRfM0_fmVircY"},
+  {no:58, name:"Waste Management from Rural Small-Scale Industries (Jaggery, Oil, and Dairy Units)",type:"Online",  code:"SBM-OL-34",  from:"2027-01-18",to:"2027-01-18",sid:"1lW11Wimxfyd06kz_ryliaGB_jnKAg_hkI1J7G-TWGwY"},
+  {no:59, name:"Hands on Training on IMIS Dashboard & Documentation",type:"Online",  code:"SBM-OL-35",  from:"2027-01-19",to:"2027-01-19",sid:"1mbdC9yInGsoPutIEhdloxQVHhIDZEDaGV7H1o23QoOY"},
+  {no:60, name:"Reflections on Swachh Bharat Mission in India",type:"Online",  code:"SBM-W-10",   from:"2027-01-20",to:"2027-01-20",sid:"12qAOu3-Oxl0TzN0U_LKWz9S5QgOI98WIta7Ptf6IQAM"},
+  {no:61, name:"Training of Master Trainers on imparting training skills using DOPT modules. (Batch 4)",type:"Physical", code:"SPM-P-01",   from:"2027-02-01",to:"2027-02-05",sid:"1laKUZ4zn9QX_FWaH4HhlNiTX11fXLQ88a-KnpAmtK3w"},
+  {no:62, name:"Training on Solid Waste Management Rules",type:"Online",  code:"SBM-OL-36",  from:"2027-02-01",to:"2027-02-01",sid:"1NlE6luW4A-Jv2DSTy3MqSI7iSrTPK7GIvAfkQHc63pQ"},
+  {no:63, name:"Designing Sanitation Assets for Hilly Regions & their O&M",type:"Online",  code:"SBM-OL-37",  from:"2027-02-02",to:"2027-02-02",sid:"1zhno90huaxKvEaD2MgbUICHNHUod79-84VVH2797wT0"},
+  {no:64, name:"Designing Sanitation Assets for Flood- and Storm-Prone Areas",type:"Online",  code:"SBM-OL-38",  from:"2027-02-03",to:"2027-02-03",sid:"1d898tqmTaE8YQWHtf_LHkDEGhOHC3cluD3VdXn4EkeE"},
+  {no:65, name:"Comprehensive Operation and Management of Solid and Liquid Waste Disposal Facilities (Batch 3)",type:"Hybrid",  code:"SBM-H-01",   from:"2027-01-21",to:"2027-02-12",sid:"16Ji6Lazlvy3q_cW2d_efRgmyticNw0aBRCcRtenDWtk"},
+  {no:66, name:"Climate-Resilient Sanitation Systems",type:"Online",  code:"SBM-OL-39",  from:"2027-02-15",to:"2027-02-15",sid:"1jAsHug7F1TdWdsr881pHiXf5WtRzHNDvrP1rfuY7hJs"},
+  {no:67, name:"GIS Mapping for Sanitation Planning",type:"Online",  code:"SBM-OL-40",  from:"2027-02-16",to:"2027-02-16",sid:"153eVxNNl9rm5sma62iSsYw2beJjJKlRn4TlGdhtEOsE"},
+  {no:68, name:"Biodegradable Alternatives to Plastic Products",type:"Online",  code:"SBM-W-11",   from:"2027-02-17",to:"2027-02-17",sid:"1JC9ngPtJCF-UhwM8UwFmf9h_sO_1DMy8uRbb0UJZFms"},
+  {no:69, name:"Planning, designing, constructing, and managing GAS/CBG Plants and Bio-Resource Recovery Systems",type:"Hybrid",  code:"SBM-H-09",   from:"2027-02-04",to:"2027-02-26",sid:"1_EK0TAkE_nfw7ynQbM4O8xDM7l5j-my5W53rgnU_cE4"},
+  {no:70, name:"Different PRA Tools (Batch 2)",type:"Online",  code:"SBM-OL-41",  from:"2027-03-01",to:"2027-03-01",sid:"1WwHh0QbNBlHu83Cr6kfCHhXrGbpiZwfg9BIdTaq8pAs"},
+  {no:71, name:"IEC Planning & Monitoring",type:"Online",  code:"SBM-OL-42",  from:"2027-03-02",to:"2027-03-02",sid:"1t548MVYxqHgYQTkGgWpsZMrnKAXJnbak2uC6v4jSiSg"},
+  {no:72, name:"Sanitation in the Context of Climate Change",type:"Online",  code:"SBM-OL-43",  from:"2027-03-03",to:"2027-03-03",sid:"1E6ru0H4KnGsZA_Qa1awPC53XZDl2ISz0HhjfNwEftxo"},
+  {no:73, name:"Impact of SBM on Health & Livelihoods",type:"Online",  code:"SBM-W-12",   from:"2027-03-04",to:"2027-03-04",sid:"1Dh0VOucObyKt8sQ9_DAcgcL8-05oLNS4vnNmZKsp_cA"},
+  {no:74, name:"Inclusive & Gender-Sensitive Sanitation",type:"Online",  code:"SBM-OL-44",  from:"2027-03-05",to:"2027-03-05",sid:"1f0y9w-jTukCrUlPeVSX33N-RnnnKWQIO_iegiXb4sBU"},
+  {no:75, name:"Planning, designing, construction and Management of FSSM & Black Water Infrastructure",type:"Hybrid",  code:"SBM-H-10",   from:"2027-02-18",to:"2027-03-12",sid:"1KCkfyGhvVdEJiEgkvp0NqkPRmzHIYmb8GhOE4YZFl80"},
+  {no:76, name:"Workplace Safety & POSH Training for Sanitation Staff",type:"Online",  code:"SBM-OL-45",  from:"2027-03-15",to:"2027-03-15",sid:"1jkYC_sBnRuGJDcVe7gdiFUitgx9EkmReQvWsjZyR7w0"},
+  {no:77, name:"Nature based treatment for Grey Water Management",type:"Online",  code:"SBM-OL-46",  from:"2027-03-16",to:"2027-03-16",sid:"1fnRBzVy15Hj31fRSG_aX_1cdlkSaDPBUL2ZjZQDU-oM"},
+  {no:78, name:"WASH Governance & Institutional Frameworks",type:"Online",  code:"SBM-OL-47",  from:"2027-03-17",to:"2027-03-17",sid:"1e2EoOZ_E9g3eNzdZ7wzzEtoYjK7ZZu05SYqaRIZ5H4o"},
+  {no:79, name:"SBM-G Guidelines: From Policy to Practice",type:"Online",  code:"SBM-OL-48",  from:"2027-03-18",to:"2027-03-18",sid:"1CYqUzS2GPLPIr7dJWF2oFOKmLmXT0qTokEUlHQCqYm0"},
+  {no:80, name:"Inclusive WASH: Equity and Access",type:"Online",  code:"SBM-OL-49",  from:"2027-03-19",to:"2027-03-19",sid:"1rTuowkb3SeCISn1RRaiKgBpu4UxqcclTGOwDNY0ewQo"},
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE  — stores full participant rows per sheet
+// ═══════════════════════════════════════════════════════
+// sheetData[sid] = array of {name,gender,state,desig,dept} or null
+const sheetData = {};
+let loadedCnt = 0;
+const charts = {};
+let selectedSid = null;
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function courseStatus(f,t){
+  const n=new Date();n.setHours(0,0,0,0);
+  const fd=new Date(f),td=new Date(t);
+  return n<fd?'upcoming':n>td?'completed':'ongoing';
+}
+function fmtDate(d){
+  const [y,m,day]=d.split('-');
+  return `${parseInt(day)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${y}`;
+}
+function mk(d){return d.slice(0,7);}
+function mkLabel(k){const[y,m]=k.split('-');return`${['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]} ${y}`;}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():'';}
+
+// Parse gender from various formats
+function parseGender(g){
+  if(!g) return 'Other';
+  const v=g.toString().trim().toUpperCase();
+  if(v==='M'||v==='MALE'||v==='मेल'||v==='पुरुष') return 'Male';
+  if(v==='F'||v==='FEMALE'||v==='महिला'||v==='स्त्री') return 'Female';
+  return 'Other';
+}
+
+// Count freq map, return sorted array [{label,count}]
+function topN(arr, key, n=8){
+  const m={};
+  arr.forEach(r=>{const v=(r[key]||'').toString().trim();if(v&&v.length>1)m[v]=(m[v]||0)+1;});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([label,count])=>({label,count}));
+}
+
+// ═══════════════════════════════════════════════════════
+// FETCH  — reads CSV, parses columns
+// Columns: A=SL.No, B=State, C=Name, D=Gender, E=Desig, F=Dept, G=Mobile, H=Email
+// ═══════════════════════════════════════════════════════
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  if(lines.length < 2) return [];
+  const rows = [];
+  // skip header row (index 0)
+  for(let i=1;i<lines.length;i++){
+    const cols = splitCSVLine(lines[i]);
+    if(cols.length < 2) continue;
+    const name = (cols[2]||'').replace(/^"|"$/g,'').trim();
+    if(!name || name.length < 2) continue; // skip empty rows
+    // skip if col C looks like a number (SL.No misread) or header repeat
+    if(/^\d+$/.test(name)) continue;
+    rows.push({
+      name:  name,
+      state: (cols[1]||'').replace(/^"|"$/g,'').trim(),
+      gender:parseGender((cols[3]||'').replace(/^"|"$/g,'').trim()),
+      desig: (cols[4]||'').replace(/^"|"$/g,'').trim(),
+      dept:  (cols[5]||'').replace(/^"|"$/g,'').trim(),
+    });
+  }
+  return rows;
+}
+
+function splitCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else{cur+=c;}
+  }
+  result.push(cur);
+  return result;
+}
+
+async function fetchSheet(sid){
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=0`;
+    const r=await fetch(url,{redirect:'follow'});
+    if(r.ok){
+      const text=await r.text();
+      if(text&&text.length>10) return parseCSV(text);
+    }
+  }catch(e){}
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD ALL
+// ═══════════════════════════════════════════════════════
+async function loadAllSheets(){
+  loadedCnt=0;
+  COURSES.forEach(c=>{delete sheetData[c.sid];});
+  document.getElementById('loadedCount').textContent='0';
+  renderTable();
+  const BATCH=8;
+  for(let i=0;i<COURSES.length;i+=BATCH){
+    await Promise.all(COURSES.slice(i,i+BATCH).map(async c=>{
+      const rows=await fetchSheet(c.sid);
+      sheetData[c.sid]=rows;
+      if(rows!==null){loadedCnt++;document.getElementById('loadedCount').textContent=loadedCnt;}
+      updateRow(c);
+    }));
+    updateAllDashboard();
+  }
+  document.getElementById('lastRefreshed').textContent=new Date().toLocaleString('en-IN');
+  updateAllDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════════════
+function getFiltered(){
+  const type=document.getElementById('filterType').value;
+  const month=document.getElementById('filterMonth').value;
+  const status=document.getElementById('filterStatus').value;
+  const q=document.getElementById('searchBox').value.toLowerCase().trim();
+  return COURSES.filter(c=>{
+    if(type&&c.type!==type) return false;
+    if(month&&mk(c.from)!==month) return false;
+    if(status&&courseStatus(c.from,c.to)!==status) return false;
+    if(q&&!c.name.toLowerCase().includes(q)&&!c.code.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function applyFiltersAndFetch(){
+  selectedSid=null;
+  document.getElementById('participantPanel').style.display='none';
+  updateAllDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+// GET AGGREGATE PARTICIPANTS for current filter
+// ═══════════════════════════════════════════════════════
+function getAggParticipants(courses){
+  const all=[];
+  courses.forEach(c=>{
+    const d=sheetData[c.sid];
+    if(d&&d.length) all.push(...d);
+  });
+  return all;
+}
+
+// ═══════════════════════════════════════════════════════
+// UPDATE ALL DASHBOARD
+// ═══════════════════════════════════════════════════════
+function updateAllDashboard(){
+  const fc=getFiltered();
+  updateTopBand(fc);
+  updateWidgets(fc);
+  updateCharts(fc);
+  updateBandGrid(fc);
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════
+// TOP BAND
+// ═══════════════════════════════════════════════════════
+function updateTopBand(fc){
+  document.getElementById('tbTotal').textContent=fc.length;
+  document.getElementById('tbOnline').textContent=fc.filter(c=>c.type==='Online').length;
+  document.getElementById('tbHybrid').textContent=fc.filter(c=>c.type==='Hybrid').length;
+  document.getElementById('tbPhysical').textContent=fc.filter(c=>c.type==='Physical').length;
+  const withNoms=fc.filter(c=>sheetData[c.sid]&&sheetData[c.sid].length>0);
+  const noNoms=fc.filter(c=>sheetData[c.sid]!==null&&sheetData[c.sid]!==undefined&&sheetData[c.sid].length===0);
+  document.getElementById('tbHasNoms').textContent=withNoms.length;
+  document.getElementById('tbNoNoms').textContent=noNoms.length;
+  const totalRegs=fc.reduce((s,c)=>s+(sheetData[c.sid]?sheetData[c.sid].length:0),0);
+  document.getElementById('tbTotalRegs').textContent=totalRegs.toLocaleString('en-IN');
+}
+
+// ═══════════════════════════════════════════════════════
+// WIDGETS
+// ═══════════════════════════════════════════════════════
+function updateWidgets(fc){
+  // If a course is selected, show only that course's participants
+  let participants;
+  if(selectedSid){
+    participants=sheetData[selectedSid]||[];
+  } else {
+    participants=getAggParticipants(fc);
+  }
+  updateGenderWidget(participants);
+  updateListWidget('wStateList',topN(participants,'state'));
+  updateListWidget('wDeptList',topN(participants,'dept'));
+  updateListWidget('wDesigList',topN(participants,'desig'));
+}
+
+function updateGenderWidget(participants){
+  const male=participants.filter(p=>p.gender==='Male').length;
+  const female=participants.filter(p=>p.gender==='Female').length;
+  const total=participants.length||1;
+  document.getElementById('wMale').textContent=male;
+  document.getElementById('wFemale').textContent=female;
+  document.getElementById('wMalePct').textContent=`${Math.round(male/total*100)}%`;
+  document.getElementById('wFemalePct').textContent=`${Math.round(female/total*100)}%`;
+}
+
+function updateListWidget(elId, items){
+  const el=document.getElementById(elId);
+  if(!items.length){el.innerHTML='<div class="no-data">No data loaded yet</div>';return;}
+  const max=items[0].count;
+  el.innerHTML=items.map(it=>`
+    <div class="witem">
+      <span class="witem-label">${it.label.length>22?it.label.slice(0,20)+'…':it.label}</span>
+      <div class="witem-bar"><div class="witem-bar-fill" style="width:${Math.round(it.count/max*100)}%"></div></div>
+      <span class="witem-count">${it.count}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════
+function updateCharts(fc){
+  const participants=getAggParticipants(fc);
+
+  // 1. Type bar
+  destroyChart('typeChart');
+  const types=['Online','Hybrid','Physical'];
+  charts['typeChart']=new Chart(document.getElementById('typeChart'),{
+    type:'bar',
+    data:{labels:types,datasets:[{label:'Registrations',
+      data:types.map(t=>fc.filter(c=>c.type===t).reduce((s,c)=>s+(sheetData[c.sid]?sheetData[c.sid].length:0),0)),
+      backgroundColor:['#1a7bbf','#7b1fa2','#e65100'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'#eef3f7'}},x:{grid:{display:false}}}}
+  });
+
+  // 2. Donut
+  destroyChart('donutChart');
+  charts['donutChart']=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:types,datasets:[{data:types.map(t=>fc.filter(c=>c.type===t).length),
+      backgroundColor:['#1a7bbf','#7b1fa2','#e65100'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+
+  // 3. Status
+  destroyChart('statusChart');
+  const up=fc.filter(c=>courseStatus(c.from,c.to)==='upcoming').length;
+  const on=fc.filter(c=>courseStatus(c.from,c.to)==='ongoing').length;
+  const dn=fc.filter(c=>courseStatus(c.from,c.to)==='completed').length;
+  charts['statusChart']=new Chart(document.getElementById('statusChart'),{
+    type:'pie',
+    data:{labels:[`Upcoming(${up})`,`Ongoing(${on})`,`Completed(${dn})`],
+      datasets:[{data:[up,on,dn],backgroundColor:['#f5a623','#2d7d32','#b0bec5'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+
+  // 4. Monthly
+  destroyChart('monthlyChart');
+  const byM={};
+  fc.forEach(c=>{const k=mk(c.from);if(!byM[k])byM[k]=0;byM[k]+=(sheetData[c.sid]?sheetData[c.sid].length:0);});
+  const mkeys=Object.keys(byM).sort();
+  const now=new Date();
+  charts['monthlyChart']=new Chart(document.getElementById('monthlyChart'),{
+    type:'bar',
+    data:{labels:mkeys.map(mkLabel),datasets:[{label:'Registrations',
+      data:mkeys.map(k=>byM[k]),
+      backgroundColor:mkeys.map(k=>{const[y,m]=k.split('-');const d=new Date(+y,+m-1,1);
+        return d>now?'#a8d5f0':d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()?'#2d7d32':'#1a7bbf';}),
+      borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'#eef3f7'}},x:{grid:{display:false}}}}
+  });
+
+  // 5. Gender pie
+  destroyChart('genderChart');
+  const male=participants.filter(p=>p.gender==='Male').length;
+  const female=participants.filter(p=>p.gender==='Female').length;
+  const other=participants.length-male-female;
+  charts['genderChart']=new Chart(document.getElementById('genderChart'),{
+    type:'doughnut',
+    data:{labels:[`Male (${male})`,`Female (${female})`,`Other/Unknown (${other})`],
+      datasets:[{data:[male,female,other],backgroundColor:['#1a7bbf','#e91e8c','#90a4ae'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+
+  // 6. Top states bar
+  destroyChart('stateChart');
+  const topStates=topN(participants,'state',10);
+  charts['stateChart']=new Chart(document.getElementById('stateChart'),{
+    type:'bar',
+    data:{labels:topStates.map(s=>s.label.length>14?s.label.slice(0,12)+'…':s.label),
+      datasets:[{label:'Participants',data:topStates.map(s=>s.count),
+        backgroundColor:'#1a7bbf',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,grid:{color:'#eef3f7'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// BAND GRID
+// ═══════════════════════════════════════════════════════
+function updateBandGrid(fc){
+  const types=['Online','Hybrid','Physical','All'];
+  const bands=[
+    {label:'Zero (0)',   color:'#e53935', test:n=>n===0},
+    {label:'< 10',       color:'#ff7043', test:n=>n>0&&n<10},
+    {label:'10 – 14',    color:'#ffa726', test:n=>n>=10&&n<15},
+    {label:'15 – 19',    color:'#ffca28', test:n=>n>=15&&n<20},
+    {label:'20 – 24',    color:'#66bb6a', test:n=>n>=20&&n<25},
+    {label:'25 – 30',    color:'#26a69a', test:n=>n>=25&&n<=30},
+    {label:'> 30',       color:'#1a7bbf', test:n=>n>30},
+  ];
+  const grid=document.getElementById('bandGrid');
+  grid.innerHTML=types.map(type=>{
+    const courses=type==='All'?fc:fc.filter(c=>c.type===type);
+    const loaded=courses.filter(c=>sheetData[c.sid]!==null&&sheetData[c.sid]!==undefined);
+    return `<div class="band-card">
+      <h4>${type==='All'?'All Courses':type} <span style="font-weight:400;color:var(--muted)">(${courses.length} courses)</span></h4>
+      ${bands.map(b=>{
+        const cnt=loaded.filter(c=>b.test(sheetData[c.sid].length)).length;
+        return `<div class="band-item">
+          <span class="band-dot" style="background:${b.color}"></span>
+          <span class="band-label">${b.label} registrations</span>
+          <span class="band-count">${cnt}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER COURSE TABLE
+// ═══════════════════════════════════════════════════════
+function renderTable(){
+  const fc=getFiltered();
+  document.getElementById('tableCount').textContent=`Showing ${fc.length} of ${COURSES.length} courses`;
+  const maxReg=Math.max(1,...fc.map(c=>sheetData[c.sid]?sheetData[c.sid].length:0));
+  document.getElementById('courseTableBody').innerHTML=fc.map(c=>{
+    const st=courseStatus(c.from,c.to);
+    const stHtml=`<span class="status-pill status-${st}">${st==='upcoming'?'🟡 Upcoming':st==='ongoing'?'🟢 Ongoing':'⚫ Completed'}</span>`;
+    const d=sheetData[c.sid];
+    const cnt=d===undefined?null:d===null?-1:d.length;
+    const cntHtml=cnt===null?`<span class="skel"></span>`:cnt===-1?`<span style="color:#bbb;font-size:.7rem">—</span>`
+      :cnt===0?`<span class="reg-zero">0</span>`:`<span class="reg-num">${cnt}</span>`;
+    const pct=cnt>0?Math.round(cnt/maxReg*100):0;
+    const sel=selectedSid===c.sid?'selected-row':'';
+    return `<tr class="clickable-row ${sel}" onclick="selectCourse('${c.sid}','${c.name.replace(/'/g,"\\'")}')">
+      <td>${c.no}</td>
+      <td style="max-width:250px;line-height:1.35">${c.name}</td>
+      <td><span class="badge badge-${c.type}">${c.type}</span></td>
+      <td style="font-family:monospace;font-size:.7rem;white-space:nowrap">${c.code}</td>
+      <td style="white-space:nowrap;color:var(--muted);font-size:.72rem">${fmtDate(c.from)}</td>
+      <td style="white-space:nowrap;color:var(--muted);font-size:.72rem">${fmtDate(c.to)}</td>
+      <td>${stHtml}</td>
+      <td style="text-align:center">${cntHtml}</td>
+      <td><div class="pb-bg"><div class="pb-fill" style="width:${pct}%"></div></div></td>
+      <td><a class="sheet-link" href="https://docs.google.com/spreadsheets/d/${c.sid}" target="_blank" onclick="event.stopPropagation()">📊 Open</a></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateRow(c){
+  // re-render full table to keep things consistent
+  renderTable();
+  updateTopBand(getFiltered());
+}
+
+// ═══════════════════════════════════════════════════════
+// SELECT COURSE — show participant list
+// ═══════════════════════════════════════════════════════
+function selectCourse(sid, name){
+  selectedSid = (selectedSid===sid) ? null : sid;
+  renderTable();
+  if(!selectedSid){
+    document.getElementById('participantPanel').style.display='none';
+    updateWidgets(getFiltered());
+    return;
+  }
+  const participants=sheetData[sid]||[];
+  document.getElementById('participantPanelTitle').textContent=
+    `👥 Participants — ${name} (${participants.length} registered)`;
+  const tbody=document.getElementById('participantTableBody');
+  if(!participants.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">No participants loaded or sheet may be private</td></tr>`;
+  } else {
+    tbody.innerHTML=participants.map((p,i)=>`<tr>
+      <td>${i+1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td><span style="color:${p.gender==='Male'?'#1a7bbf':p.gender==='Female'?'#e91e8c':'#666'};font-weight:700">${p.gender}</span></td>
+      <td>${p.state}</td>
+      <td style="font-size:.72rem">${p.desig}</td>
+      <td style="font-size:.72rem">${p.dept}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('participantPanel').style.display='block';
+  document.getElementById('participantPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  // Update widgets for this course only
+  updateWidgets(getFiltered());
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.getElementById('totalCount').textContent=COURSES.length;
+// Count types for initial top band
+document.getElementById('tbOnline').textContent=COURSES.filter(c=>c.type==='Online').length;
+document.getElementById('tbHybrid').textContent=COURSES.filter(c=>c.type==='Hybrid').length;
+document.getElementById('tbPhysical').textContent=COURSES.filter(c=>c.type==='Physical').length;
+renderTable();
+updateCharts(COURSES);
+updateBandGrid(COURSES);
+loadAllSheets();
+</script>
+</body>
+</html>
